@@ -1,0 +1,207 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  margin: 0;
+  background: #f5f5f5;
+}
+
+h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+button {
+  margin: 5px;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  background: #fff;
+  transition: all 0.2s;
+}
+
+button:hover {
+  background: #f0f0f0;
+  border-color: #999;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+.container {
+  display: flex;
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Sidebar catégories */
+.sidebar {
+  width: 150px;
+  background: white;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.sidebar button {
+  display: block;
+  width: 100%;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+/* Zone dynamique (au centre) */
+.content {
+  flex: 1;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  min-height: 500px;
+}
+
+.content h3 {
+  color: #333;
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+/* Ticket à droite */
+#ticket {
+  width: 280px;
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  font-size: 13px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+#items {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.ticket-item {
+  border-bottom: 1px solid #eee;
+  padding: 8px 0;
+  position: relative;
+}
+
+.ticket-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.ticket-item-details {
+  font-size: 11px;
+  color: #666;
+  margin-left: 5px;
+  line-height: 1.4;
+}
+
+.ticket-item-comment {
+  font-size: 11px;
+  color: #0066cc;
+  margin-left: 5px;
+  font-style: italic;
+}
+
+.remove-btn {
+  background: #ff4444;
+  color: white;
+  border: none;
+  padding: 3px 8px;
+  font-size: 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+.remove-btn:hover {
+  background: #cc0000;
+}
+
+.total {
+  border-top: 2px solid #333;
+  margin-top: 15px;
+  padding-top: 10px;
+  font-weight: bold;
+  font-size: 16px;
+  text-align: right;
+}
+
+/* Formulaires */
+label {
+  display: block;
+  margin: 8px 0;
+  cursor: pointer;
+}
+
+input[type="checkbox"] {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+input[type="number"] {
+  width: 60px;
+  padding: 5px;
+  margin: 0 10px;
+}
+
+textarea {
+  width: calc(100% - 20px);
+  padding: 8px;
+  margin-top: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: Arial, sans-serif;
+  resize: vertical;
+}
+
+.btn-primary {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.btn-primary:hover {
+  background: #45a049;
+}
+
+.supplement-section {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
+}
+
+.supplement-section h4 {
+  margin-bottom: 10px;
+  color: #555;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #ticket, #ticket * {
+    visibility: visible;
+  }
+  #ticket {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

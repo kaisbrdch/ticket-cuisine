@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prise de Commande</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2>🍔 App Ticket Cuisine</h2>
+
+  <div class="container">
+    <!-- Barre de catégories -->
+    <div class="sidebar">
+      <button onclick="showCategory('Burgers')">Burgers</button>
+      <button onclick="showCategory('Sandwichs')">Sandwichs</button>
+      <button onclick="showCategory('Tacos')">Tacos</button>
+      <button onclick="showCategory('Poutines')">Poutines</button>
+      <button onclick="showCategory('Assiettes')">Assiettes</button>
+      <button onclick="showCategory('Salades')">Salades</button>
+      <button onclick="showCategory('Menu Kids')">Menu Kids</button>
+      <button onclick="showCategory('Petites faims')">Petites faims</button>
+      <button onclick="showCategory('Boissons')">Boissons</button>
+      <button onclick="showCategory('Desserts')">Desserts</button>
+    </div>
+
+    <!-- Zone dynamique pour produits et étapes -->
+    <div class="content" id="contentArea">
+      <p>Choisis une catégorie pour commencer.</p>
+    </div>
+
+    <!-- Ticket -->
+    <div id="ticket">
+      <h3 style="text-align:center">Ticket de Commande</h3>
+      <div id="items"></div>
+      <div class="total">
+        Total: <span id="total">0.00</span> €
+      </div>
+      <div style="margin-top:10px;">
+        <label style="display:block; margin-bottom:5px;">Commentaire général:</label>
+        <textarea id="globalComment" style="width:100%; height:50px; font-family:monospace; font-size:12px;"></textarea>
+      </div>
+      <div style="text-align:center; margin-top:15px;">
+        <button onclick="printTicket()">🖨️ Imprimer</button>
+        <button onclick="clearTicket()">❌ Nouveau</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
