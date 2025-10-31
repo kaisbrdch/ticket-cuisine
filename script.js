@@ -1,9 +1,26 @@
 let total = 0;
 let itemCounter = 0;
 let currentItem = {};
+let orderNumber = 1;
+let ticketItems = []; // Stockage des items pour le ticket d'impression
 
-// Liste des viandes pour tacos/poutines/suppléments
+// Liste des viandes et leurs abréviations
 const VIANDES = ['Poulet', 'Poulet mariné', 'Cordon bleu', 'Viande hachée', 'Tenders', 'Nuggets'];
+const VIANDES_ABR = {
+  'Poulet': 'PLT',
+  'Poulet mariné': 'PLTM',
+  'Cordon bleu': 'CB',
+  'Viande hachée': 'ST',
+  'Tenders': 'TD',
+  'Nuggets': 'NG'
+};
+
+// Abréviations des crudités
+const CRUDITES_ABR = {
+  'Salade': 'S',
+  'Tomate': 'T',
+  'Oignon': 'O'
+};
 
 // Liste des suppléments à 1.50€
 const SUPPLEMENTS_150 = ['Oeuf', 'Bacon', 'Boursin', 'Rosti', 'Emmental', 'Cheddar', 'Mozza', 'Chèvre', 'Chèvre miel', 'Champignon', 'Poivrons', 'Oignons crispy'];
@@ -127,7 +144,7 @@ function startItem(category, product) {
       chooseViandes();
       break;
     case 'Salades':
-      chooseSupplements();
+      showFinalButtons();
       break;
     case 'Menu Kids':
       addCommentStep();
@@ -242,24 +259,21 @@ function chooseSauces() {
 
   content.innerHTML = html;
 
-  // --- Limitation à 2 sauces ---
+  // Limitation à 2 sauces
   const checkboxes = document.querySelectorAll('.sauce-check');
   checkboxes.forEach(cb => {
     cb.addEventListener('change', () => {
       const checked = document.querySelectorAll('.sauce-check:checked');
       if (checked.length >= maxSauces) {
-        // désactive les cases non cochées
         checkboxes.forEach(box => {
           if (!box.checked) box.disabled = true;
         });
       } else {
-        // réactive toutes les cases si moins de 2 cochées
         checkboxes.forEach(box => box.disabled = false);
       }
     });
   });
 }
-
 
 function validateSauces(maxSauces) {
   const checks = document.querySelectorAll('.sauce-check:checked');
@@ -271,88 +285,135 @@ function validateSauces(maxSauces) {
   
   currentItem.sauces = [];
   checks.forEach(check => {
-    currentItem.sauces.push(check.parentElement.textContent.trim());
+    currentItem.sauces.push(check.value);
   });
   
-  // Passe à l'étape suivante selon la catégorie
-  if (currentItem.category === 'Sandwichs' || currentItem.category === 'Tacos' || currentItem.category === 'Poutines') {
-    chooseGrattinage();
-  } else if (currentItem.category === 'Assiettes') {
-    chooseSupplements();
-  } else {
-    chooseSupplements();
-  }
+  showFinalButtons();
 }
 
-// Étape: Grattinage
-function chooseGrattinage() {
+// Affiche les boutons finaux avec option d'ouvrir le panneau d'options
+function showFinalButtons() {
   const content = document.getElementById("contentArea");
+  const hasOptionalOptions = needsOptionalOptions();
   
-  let html = `<h3>Grattinage (optionnel) - +2€</h3>`;
-  html += `<label><input type="radio" name="grattinage" value=""> Aucun</label>`;
+  let html = `<h3>✅ ${currentItem.name} configuré</h3>`;
+  html += `<p>Prix actuel: <strong>${currentItem.price.toFixed(2)}€</strong></p>`;
   
-  GRATINAGES.forEach(grat => {
-    html += `<label><input type="radio" name="grattinage" value="${grat}"> ${grat}</label>`;
-  });
+  if (hasOptionalOptions) {
+    const optionCount = getOptionCount();
+    html += `<div class="action-buttons">`;
+    html += `<button class="btn-secondary" onclick="openOptions()">⚙️ Options + ${optionCount > 0 ? '<span class="options-badge">' + optionCount + '</span>' : ''}</button>`;
+    html += `<button class="btn-primary" onclick="finalizeItem()">Ajouter au ticket</button>`;
+    html += `</div>`;
+  } else {
+    html += `<button class="btn-primary" onclick="finalizeItem()">Ajouter au ticket</button>`;
+  }
   
-  html += `<br><br><button class="btn-primary" onclick="validateGrattinage()">Suivant</button>`;
   content.innerHTML = html;
 }
 
-function validateGrattinage() {
-  const selected = document.querySelector('input[name="grattinage"]:checked');
-  if (selected && selected.value) {
-    currentItem.grattinage = selected.value;
+// Vérifie si le produit peut avoir des options
+function needsOptionalOptions() {
+  const cat = currentItem.category;
+  return ['Burgers', 'Sandwichs', 'Tacos', 'Poutines', 'Assiettes', 'Salades'].includes(cat);
+}
+
+// Compte le nombre d'options ajoutées
+function getOptionCount() {
+  let count = 0;
+  if (currentItem.grattinage) count++;
+  if (currentItem.supplements.length > 0) count += currentItem.supplements.length;
+  if (currentItem.comment) count++;
+  return count;
+}
+
+// Ouvre le panneau d'options
+function openOptions() {
+  const panel = document.getElementById("optionsPanel");
+  const content = document.getElementById("optionsContent");
+  
+  let html = '';
+  
+  // Section Grattinage (seulement pour certaines catégories)
+  if (['Sandwichs', 'Tacos', 'Poutines'].includes(currentItem.category)) {
+    html += `<div class="options-section">`;
+    html += `<h4>🧀 Grattinage (+2€)</h4>`;
+    html += `<label><input type="radio" name="grattinage" value="" ${!currentItem.grattinage ? 'checked' : ''}> Aucun</label>`;
+    GRATINAGES.forEach(grat => {
+      html += `<label><input type="radio" name="grattinage" value="${grat}" ${currentItem.grattinage === grat ? 'checked' : ''}> ${grat}</label>`;
+    });
+    html += `</div>`;
+  }
+  
+  // Section Suppléments
+  html += `<div class="options-section">`;
+  html += `<h4>➕ Supplément viande (+2.50€)</h4>`;
+  VIANDES.forEach((viande) => {
+    const isChecked = currentItem.supplements.some(s => s.name === viande);
+    html += `<label><input type="checkbox" class="opt-supp-viande" value="${viande}" data-price="2.5" ${isChecked ? 'checked' : ''}> ${viande}</label>`;
+  });
+  html += `</div>`;
+  
+  html += `<div class="options-section">`;
+  html += `<h4>➕ Autres suppléments (+1.50€)</h4>`;
+  SUPPLEMENTS_150.forEach((supp) => {
+    const isChecked = currentItem.supplements.some(s => s.name === supp);
+    html += `<label><input type="checkbox" class="opt-supp-other" value="${supp}" data-price="1.5" ${isChecked ? 'checked' : ''}> ${supp}</label>`;
+  });
+  html += `</div>`;
+  
+  // Section Commentaire
+  html += `<div class="options-section">`;
+  html += `<h4>💬 Commentaire</h4>`;
+  html += `<textarea id="optItemComment" rows="3" style="width:100%;" placeholder="Ex: Sans oignon, bien cuit...">${currentItem.comment || ''}</textarea>`;
+  html += `</div>`;
+  
+  html += `<button class="btn-primary" style="width:100%;" onclick="applyOptions()">Appliquer les options</button>`;
+  
+  content.innerHTML = html;
+  panel.classList.add('open');
+}
+
+// Ferme le panneau d'options
+function closeOptions() {
+  document.getElementById("optionsPanel").classList.remove('open');
+}
+
+// Applique les options sélectionnées
+function applyOptions() {
+  // Recalcule le prix de base (sans les anciens suppléments et grattinage)
+  currentItem.price = currentItem.isMenu ? currentItem.basePrice + currentItem.menuDiff : currentItem.basePrice;
+  currentItem.supplements = [];
+  currentItem.grattinage = null;
+  
+  // Grattinage
+  const gratSelected = document.querySelector('input[name="grattinage"]:checked');
+  if (gratSelected && gratSelected.value) {
+    currentItem.grattinage = gratSelected.value;
     currentItem.price += 2;
   }
   
-  chooseSupplements();
-}
-
-// Étape: Suppléments
-function chooseSupplements() {
-  const content = document.getElementById("contentArea");
-  
-  let html = `<h3>Suppléments (optionnel)</h3>`;
-  
-  // Suppléments viande à 2.5€
-  html += `<div class="supplement-section">`;
-  html += `<h4>Supplément viande (+2.50€)</h4>`;
-  VIANDES.forEach((viande, idx) => {
-    html += `<label><input type="checkbox" class="supp-viande" data-price="2.5"> ${viande}</label>`;
-  });
-  html += `</div>`;
-  
-  // Suppléments à 1.50€
-  html += `<div class="supplement-section">`;
-  html += `<h4>Autres suppléments (+1.50€)</h4>`;
-  SUPPLEMENTS_150.forEach((supp, idx) => {
-    html += `<label><input type="checkbox" class="supp-other" data-price="1.5"> ${supp}</label>`;
-  });
-  html += `</div>`;
-  
-  html += `<br><br><button class="btn-primary" onclick="validateSupplements()">Suivant</button>`;
-  content.innerHTML = html;
-}
-
-function validateSupplements() {
-  // Récupère les suppléments viande
-  document.querySelectorAll('.supp-viande:checked').forEach(check => {
-    const name = check.parentElement.textContent.trim();
+  // Suppléments viande
+  document.querySelectorAll('.opt-supp-viande:checked').forEach(check => {
+    const name = check.value;
     const price = parseFloat(check.dataset.price);
     currentItem.supplements.push({name, price});
     currentItem.price += price;
   });
   
-  // Récupère les autres suppléments
-  document.querySelectorAll('.supp-other:checked').forEach(check => {
-    const name = check.parentElement.textContent.trim();
+  // Autres suppléments
+  document.querySelectorAll('.opt-supp-other:checked').forEach(check => {
+    const name = check.value;
     const price = parseFloat(check.dataset.price);
     currentItem.supplements.push({name, price});
     currentItem.price += price;
   });
   
-  addCommentStep();
+  // Commentaire
+  currentItem.comment = document.getElementById("optItemComment").value;
+  
+  closeOptions();
+  showFinalButtons(); // Rafraîchit l'affichage avec le nouveau prix
 }
 
 // Étape: Quantité pour petites faims
@@ -381,7 +442,7 @@ function setPetitesFaimsQty(qty) {
   addCommentStep();
 }
 
-// Étape: Commentaire
+// Étape: Commentaire (simplifiée - pour les produits sans options)
 function addCommentStep() {
   const content = document.getElementById("contentArea");
   content.innerHTML = `
@@ -394,12 +455,16 @@ function addCommentStep() {
 
 // Finalise et ajoute l'item au ticket
 function finalizeItem() {
-  const comment = document.getElementById("itemComment")?.value || '';
-  currentItem.comment = comment;
+  // Récupère le commentaire si l'étape commentaire simple est affichée
+  const commentField = document.getElementById("itemComment");
+  if (commentField && !currentItem.comment) {
+    currentItem.comment = commentField.value;
+  }
   
   addItemToTicket(currentItem);
   
   document.getElementById("contentArea").innerHTML = "<p style='color:green; font-size:18px;'>✅ Ajouté au ticket!</p>";
+  closeOptions(); // Ferme le panneau d'options si ouvert
   currentItem = {};
 }
 
@@ -407,6 +472,9 @@ function finalizeItem() {
 function addItemToTicket(item) {
   const itemsDiv = document.getElementById("items");
   const itemId = itemCounter++;
+  
+  // Stocke l'item pour l'impression
+  ticketItems.push({...item, itemId});
   
   const div = document.createElement("div");
   div.className = "ticket-item";
@@ -453,6 +521,9 @@ function removeItem(itemId, price) {
     item.remove();
     total -= price;
     updateTotal();
+    
+    // Retire l'item du tableau
+    ticketItems = ticketItems.filter(ti => ti.itemId !== itemId);
   }
 }
 
@@ -461,9 +532,111 @@ function updateTotal() {
   document.getElementById("total").textContent = total.toFixed(2);
 }
 
-// Imprime le ticket
+// Réinitialise le numéro de commande
+function resetOrderNumber() {
+  if (confirm("Réinitialiser le numéro de commande à 0001 ?")) {
+    orderNumber = 1;
+    updateOrderNumberDisplay();
+  }
+}
+
+// Met à jour l'affichage du numéro de commande
+function updateOrderNumberDisplay() {
+  document.getElementById("orderNumberDisplay").textContent = orderNumber.toString().padStart(4, '0');
+}
+
+// Génère le ticket d'impression au format 80mm
+function generatePrintTicket() {
+  const now = new Date();
+  const date = now.toLocaleDateString('fr-FR');
+  const time = now.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+  const globalComment = document.getElementById("globalComment").value;
+  
+  let ticket = '';
+  ticket += '================================\n';
+  ticket += `   TICKET CUISINE #${orderNumber.toString().padStart(4, '0')}\n`;
+  ticket += `  ${date} - ${time}\n`;
+  ticket += '================================\n\n';
+  
+  ticketItems.forEach((item, index) => {
+    // Titre du produit
+    const itemTitle = `${item.category.toUpperCase()} ${item.name}${item.isMenu ? ' MENU' : ''}`;
+    ticket += `[${index + 1}] ${itemTitle}\n`;
+    
+    // Viandes (abrégées)
+    if (item.viandes.length > 0) {
+      const viandesAbr = item.viandes.map(v => VIANDES_ABR[v] || v).join(', ');
+      ticket += `    ${viandesAbr}\n`;
+    }
+    
+    // Crudités (abrégées)
+    if (item.crudites.length > 0) {
+      const cruditesAbr = item.crudites.map(c => CRUDITES_ABR[c] || c).join(', ');
+      ticket += `    ${cruditesAbr}\n`;
+    }
+    
+    // Sauces (une par ligne)
+    if (item.sauces.length > 0) {
+      item.sauces.forEach(sauce => {
+        ticket += `    ${sauce}\n`;
+      });
+    }
+    
+    // Grattinage
+    if (item.grattinage) {
+      ticket += `    GR ${item.grattinage}\n`;
+    }
+    
+    // Suppléments
+    if (item.supplements.length > 0) {
+      item.supplements.forEach(supp => {
+        const suppName = VIANDES_ABR[supp.name] || supp.name;
+        ticket += `    +${suppName}\n`;
+      });
+    }
+    
+    // Commentaire
+    if (item.comment) {
+      ticket += `    💬 ${item.comment}\n`;
+    }
+    
+    ticket += '\n';
+  });
+  
+  ticket += '================================\n';
+  
+  // Commentaire général
+  if (globalComment) {
+    ticket += '  Commentaire général:\n';
+    ticket += `  ${globalComment}\n`;
+    ticket += '================================\n';
+  }
+  
+  return ticket;
+}
+
 function printTicket() {
+  if (ticketItems.length === 0) {
+    alert("Le ticket est vide !");
+    return;
+  }
+  
+  const printTicketDiv = document.getElementById("printTicket");
+  const ticketContent = generatePrintTicket();
+  
+  printTicketDiv.innerHTML = `<pre>${ticketContent}</pre>`;
+  
+  // ✅ Affiche temporairement le ticket pour l'impression
+  printTicketDiv.style.display = "block";
+
+  // Incrémente le numéro de commande
+  orderNumber++;
+  updateOrderNumberDisplay();
+  
   window.print();
+
+  // ✅ Re-cache après impression
+  printTicketDiv.style.display = "none";
 }
 
 // Efface le ticket
@@ -471,7 +644,11 @@ function clearTicket() {
   if (confirm("Effacer tout le ticket?")) {
     document.getElementById("items").innerHTML = "";
     document.getElementById("globalComment").value = "";
+    ticketItems = [];
     total = 0;
     updateTotal();
   }
 }
+
+// Initialisation
+updateOrderNumberDisplay();

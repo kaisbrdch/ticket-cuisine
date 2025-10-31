@@ -38,6 +38,9 @@
 
     <!-- Ticket -->
     <div id="ticket">
+      <div class="order-number-display">
+        Commande #<span id="orderNumberDisplay">0001</span>
+      </div>
       <h3 style="text-align:center">Ticket de Commande</h3>
       <div id="items"></div>
       <div class="total">
@@ -50,9 +53,13 @@
       <div style="text-align:center; margin-top:15px;">
         <button onclick="printTicket()">🖨️ Imprimer</button>
         <button onclick="clearTicket()">❌ Nouveau</button>
+        <button class="btn-reset" onclick="resetOrderNumber()">🔄 Reset #</button>
       </div>
     </div>
   </div>
+
+  <!-- Ticket caché pour l'impression 80mm -->
+  <div id="printTicket" style="display:none;"></div>
 
   <script src="script.js"></script>
 </body>
