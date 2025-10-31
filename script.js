@@ -224,24 +224,42 @@ function validateViandes(nbRequired) {
 // Étape: Sauces
 function chooseSauces() {
   const content = document.getElementById("contentArea");
-  const maxSauces = (currentItem.category === 'Burgers') ? 2 : 99;
-  
+  const maxSauces = 2;
+
   let html = `<h3>Sauces pour ${currentItem.name}</h3>`;
-  if (maxSauces === 2) html += `<p>Maximum 2 sauces</p>`;
-  
+  html += `<p>Maximum ${maxSauces} sauces</p>`;
+
   html += `
-    <label><input type="checkbox" class="sauce-check"> Ketchup</label>
-    <label><input type="checkbox" class="sauce-check"> Mayo</label>
-    <label><input type="checkbox" class="sauce-check"> Barbecue</label>
-    <label><input type="checkbox" class="sauce-check"> Algérienne</label>
-    <label><input type="checkbox" class="sauce-check"> Blanche</label>
-    <label><input type="checkbox" class="sauce-check"> Samourai</label>
+    <label><input type="checkbox" class="sauce-check" value="Ketchup"> Ketchup</label>
+    <label><input type="checkbox" class="sauce-check" value="Mayo"> Mayo</label>
+    <label><input type="checkbox" class="sauce-check" value="Barbecue"> Barbecue</label>
+    <label><input type="checkbox" class="sauce-check" value="Algérienne"> Algérienne</label>
+    <label><input type="checkbox" class="sauce-check" value="Blanche"> Blanche</label>
+    <label><input type="checkbox" class="sauce-check" value="Samourai"> Samourai</label>
     <br><br>
     <button class="btn-primary" onclick="validateSauces(${maxSauces})">Suivant</button>
   `;
-  
+
   content.innerHTML = html;
+
+  // --- Limitation à 2 sauces ---
+  const checkboxes = document.querySelectorAll('.sauce-check');
+  checkboxes.forEach(cb => {
+    cb.addEventListener('change', () => {
+      const checked = document.querySelectorAll('.sauce-check:checked');
+      if (checked.length >= maxSauces) {
+        // désactive les cases non cochées
+        checkboxes.forEach(box => {
+          if (!box.checked) box.disabled = true;
+        });
+      } else {
+        // réactive toutes les cases si moins de 2 cochées
+        checkboxes.forEach(box => box.disabled = false);
+      }
+    });
+  });
 }
+
 
 function validateSauces(maxSauces) {
   const checks = document.querySelectorAll('.sauce-check:checked');
